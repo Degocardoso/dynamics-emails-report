@@ -590,12 +590,13 @@ Este projeto é desenvolvido para uso interno da FECAP.
 
 ## 🙏 Agradecimentos
 
-- Equipe de Marketing da FECAP
+- Equipe de Permanência da FECAP
 - Microsoft Dynamics 365 Team
 - Comunidade open-source PHP
 
 ---
 
 **Desenvolvido com dedicação para FECAP**
+
 
 *Versão 2.0 - Sistema Refatorado com Arquitetura Moderna*
