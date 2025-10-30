@@ -5,7 +5,7 @@ namespace App\Services;
 class CsvExporter
 {
     /**
-     * Exporta em formato TABULAR - APENAS DADOS (sem cabeçalhos)
+     * Exporta em formato TABULAR com cabeçalhos
      */
     public function export(array $groupedReports, array $filters): void
     {
@@ -13,13 +13,31 @@ class CsvExporter
         header('Content-Disposition: attachment; filename="relatorio_engajamento_' . date('Y-m-d_His') . '.csv"');
         header('Pragma: no-cache');
         header('Expires: 0');
-        
+
         $output = fopen('php://output', 'w');
-        
+
         // BOM UTF-8
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-        // FORMATO TABULAR - APENAS DADOS
+        // CABEÇALHOS
+        $headers = [
+            'Assunto',
+            'Início do Disparo',
+            'Término do Disparo',
+            'Intervalo do Disparo',
+            'Total de Envios',
+            'Total de Recebidos',
+            'Taxa de Entrega (%)',
+            'Taxa de Abertura (%)',
+            'Taxa de Clique - CTR (%)',
+            'Total de Aberturas',
+            'Total de Cliques',
+            'Total de Entregas',
+            'Total de Falhas'
+        ];
+        fputcsv($output, $headers);
+
+        // DADOS
         foreach ($groupedReports as $subject => $report) {
             $row = [
                 $subject,
