@@ -1,0 +1,94 @@
+server {
+    listen 80;
+    listen [::]:80;
+    
+    server_name seu-dominio.com;
+    root /var/www/dynamics-email-report/public;
+    
+    index index.php;
+    
+    # Logs
+    access_log /var/log/nginx/dynamics-access.log;
+    error_log /var/log/nginx/dynamics-error.log;
+    
+    # Charset
+    charset utf-8;
+    
+    # Desabilita acesso a arquivos ocultos
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Desabilita acesso a arquivos sensíveis
+    location ~* \.(env|log|md|json|lock)$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Front controller pattern
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+    
+    # PHP-FPM
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        
+        # Timeouts
+        fastcgi_read_timeout 300;
+        fastcgi_send_timeout 300;
+        
+        # Buffer
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 256 16k;
+        fastcgi_busy_buffers_size 256k;
+    }
+    
+    # Cache de arquivos estáticos
+    location ~* \.(jpg|jpeg|gif|png|css|js|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+    
+    # Headers de segurança
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    
+    # Tamanho máximo de upload
+    client_max_body_size 20M;
+}
+
+# Redirecionamento HTTPS (descomente quando tiver SSL)
+# server {
+#     listen 80;
+#     listen [::]:80;
+#     server_name seu-dominio.com;
+#     return 301 https://$server_name$request_uri;
+# }
+
+# Configuração SSL (use Let's Encrypt)
+# server {
+#     listen 443 ssl http2;
+#     listen [::]:443 ssl http2;
+#     
+#     server_name seu-dominio.com;
+#     root /var/www/dynamics-email-report/public;
+#     
+#     ssl_certificate /etc/letsencrypt/live/seu-dominio.com/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/seu-dominio.com/privkey.pem;
+#     
+#     ssl_protocols TLSv1.2 TLSv1.3;
+#     ssl_ciphers HIGH:!aNULL:!MD5;
+#     ssl_prefer_server_ciphers on;
+#     
+#     # ... resto da configuração igual ao bloco acima
+# }
