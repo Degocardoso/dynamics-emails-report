@@ -5,7 +5,7 @@ namespace App\Services;
 class CsvExporter
 {
     /**
-     * ATUALIZADO: Exporta em formato TABULAR (banco de dados) - APENAS DADOS
+     * Exporta em formato TABULAR - APENAS DADOS (sem cabeçalhos)
      */
     public function export(array $groupedReports, array $filters): void
     {
@@ -19,26 +19,7 @@ class CsvExporter
         // BOM UTF-8
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-        // FORMATO TABULAR - APENAS CABEÇALHOS E DADOS
-        $headers = [
-            'Assunto',
-            'Início do Disparo',
-            'Término do Disparo',
-            'Intervalo do Disparo',
-            'Total de Envios',
-            'Total de Recebidos',
-            'Taxa de Entrega (%)',
-            'Taxa de Abertura (%)',
-            'Taxa de Clique - CTR (%)',
-            'Total de Aberturas',
-            'Total de Cliques',
-            'Total de Entregas',
-            'Total de Falhas',
-        ];
-        
-        fputcsv($output, $headers);
-
-        // DADOS (uma linha por assunto)
+        // FORMATO TABULAR - APENAS DADOS
         foreach ($groupedReports as $subject => $report) {
             $row = [
                 $subject,
