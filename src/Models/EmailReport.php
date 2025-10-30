@@ -47,20 +47,25 @@ class EmailReport
 
     /**
      * Calcula relatório para um grupo de e-mails
+     * ATUALIZADO: Aplica filtros APENAS no cálculo das métricas, não remove e-mails dos dados
      */
-    public static function calculateReport(array $emails): array
+    public static function calculateReport(array $emails, bool $removeDefaults = false, array $testRecipients = []): array
     {
         if (empty($emails)) {
             return self::getEmptyReport();
         }
 
+        // Filtra e-mails APENAS para cálculo das métricas
+        $emailsForMetrics = self::filterEmails($emails, $removeDefaults, $testRecipients);
+
         $emailCounters = self::initializeCounters(self::STATUS_EMAIL_MAP);
         $statusCodeCounters = self::initializeCounters(self::STATUS_CODE_MAP);
-        
+
         $minTimestamp = null;
         $maxTimestamp = null;
 
-        foreach ($emails as $email) {
+        // Usa e-mails filtrados para contadores e métricas
+        foreach ($emailsForMetrics as $email) {
             self::incrementCounter($emailCounters, self::STATUS_EMAIL_MAP, $email['cad_statusemail'] ?? null);
             self::incrementCounter($statusCodeCounters, self::STATUS_CODE_MAP, $email['statuscode'] ?? null);
 
@@ -77,7 +82,8 @@ class EmailReport
             }
         }
 
-        $metrics = self::calculateMetrics($emailCounters, count($emails), $minTimestamp, $maxTimestamp);
+        // Calcula métricas com base nos e-mails filtrados
+        $metrics = self::calculateMetrics($emailCounters, count($emailsForMetrics), $minTimestamp, $maxTimestamp);
 
         return [
             'contadoresEmail' => $emailCounters,
@@ -269,15 +275,15 @@ class EmailReport
         ];
     }
 
-    public static function generateGroupedReports(array $emails): array
+    public static function generateGroupedReports(array $emails, bool $removeDefaults = false, array $testRecipients = []): array
     {
         $grouped = self::groupBySubject($emails);
         $reports = [];
-        
+
         foreach ($grouped as $subject => $emailGroup) {
-            $reports[$subject] = self::calculateReport($emailGroup);
+            $reports[$subject] = self::calculateReport($emailGroup, $removeDefaults, $testRecipients);
         }
-        
+
         return $reports;
     }
 

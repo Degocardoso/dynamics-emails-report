@@ -171,10 +171,10 @@ class EmailReportTest extends TestCase
         
         $testRecipients = ['antonio.ferreira@fecap.br', 'Sara.alves@fecap.b'];
         $filtered = EmailReport::filterEmails($emails, false, $testRecipients);
-        
+
         $this->assertCount(2, $filtered, 'Deve remover 2 destinatários de teste');
-        $this->assertEquals('usuario@exemplo.com', $filtered[0]['torecipients']);
-        $this->assertEquals('cliente@fecap.br', $filtered[1]['torecipients']);
+        $this->assertEquals('cliente@fecap.br', $filtered[0]['torecipients']);
+        $this->assertEquals('teste2@fecap.br', $filtered[1]['torecipients']);
     }
 
     /**

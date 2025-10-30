@@ -17,30 +17,21 @@ class BatchEmailProcessor
 
     /**
      * Processa e-mails em lotes para evitar timeout
+     * ATUALIZADO: Não filtra os e-mails antes, apenas passa os filtros para cálculo de métricas
      */
     public function processInBatches(array $emails, bool $removeDefaults = false, array $testRecipients = []): array
     {
         $totalEmails = count($emails);
         $this->logger->info('Iniciando processamento em batches', [
             'total' => $totalEmails,
-            'batch_size' => $this->batchSize
+            'batch_size' => $this->batchSize,
+            'remove_defaults' => $removeDefaults,
+            'test_recipients_count' => count($testRecipients)
         ]);
 
-        // Passo 1: Filtra e-mails (rápido, não agrupa)
+        // Passo 1: Agrupa por assunto (SEM filtrar - mantém todos os e-mails)
         $startTime = microtime(true);
-        $filteredEmails = EmailReport::filterEmails($emails, $removeDefaults, $testRecipients);
-        $filterTime = microtime(true) - $startTime;
-
-        $this->logger->info('Filtragem concluída', [
-            'tempo' => round($filterTime, 2) . 's',
-            'antes' => $totalEmails,
-            'depois' => count($filteredEmails),
-            'removidos' => $totalEmails - count($filteredEmails)
-        ]);
-
-        // Passo 2: Agrupa por assunto (rápido)
-        $startTime = microtime(true);
-        $grouped = EmailReport::groupBySubject($filteredEmails);
+        $grouped = EmailReport::groupBySubject($emails);
         $groupTime = microtime(true) - $startTime;
 
         $this->logger->info('Agrupamento concluído', [
@@ -48,13 +39,14 @@ class BatchEmailProcessor
             'grupos' => count($grouped)
         ]);
 
-        // Passo 3: Calcula relatórios para cada grupo
+        // Passo 2: Calcula relatórios para cada grupo, aplicando filtros APENAS nas métricas
         $reports = [];
         $processedGroups = 0;
         $startTime = microtime(true);
 
         foreach ($grouped as $subject => $emailGroup) {
-            $reports[$subject] = EmailReport::calculateReport($emailGroup);
+            // Passa os filtros para serem aplicados apenas no cálculo das métricas
+            $reports[$subject] = EmailReport::calculateReport($emailGroup, $removeDefaults, $testRecipients);
             $processedGroups++;
 
             // Log a cada 10 grupos
